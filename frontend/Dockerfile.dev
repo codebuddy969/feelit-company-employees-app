@@ -1,0 +1,19 @@
+# Base image
+FROM node:latest
+
+# Set working directory
+WORKDIR /usr/src
+
+COPY ./frontend/package.json ./package.json
+
+RUN ls -la
+
+# Install dependencies
+# RUN ls -al
+RUN npm install
+
+# Copy app code
+COPY ./frontend .
+
+# Start app with HMR
+CMD ["npm", "start"]
