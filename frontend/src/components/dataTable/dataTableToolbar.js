@@ -11,8 +11,12 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 
-export default function DataTableToolbar({numSelected, tableName = "Table name"}) {
-    
+export default function DataTableToolbar({
+    numSelected,
+    tableName = "Table name",
+    onAdd,
+    onEdit
+}) {
     return (
         <Toolbar
             sx={{
@@ -49,8 +53,8 @@ export default function DataTableToolbar({numSelected, tableName = "Table name"}
 
             {numSelected > 0 ? (
                 <ButtonGroup>
-                    <Tooltip title="Filter list">
-                        <IconButton>
+                    <Tooltip title="Edit">
+                        <IconButton onClick={onEdit}>
                             <EditIcon />
                         </IconButton>
                     </Tooltip>
@@ -62,8 +66,8 @@ export default function DataTableToolbar({numSelected, tableName = "Table name"}
                 </ButtonGroup>
             ) : (
                 <ButtonGroup>
-                    <Tooltip title="Add company">
-                        <IconButton>
+                    <Tooltip title="Add">
+                        <IconButton onClick={onAdd}>
                             <AddIcon />
                         </IconButton>
                     </Tooltip>
