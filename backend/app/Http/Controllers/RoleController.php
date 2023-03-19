@@ -15,7 +15,7 @@ class RoleController extends Controller
     public function index()
     {
         return response()->json([
-            'roles' => Role::select('id', 'name')->get()
+            'data' => Role::select('id', 'name')->get()
         ]);
     }
 

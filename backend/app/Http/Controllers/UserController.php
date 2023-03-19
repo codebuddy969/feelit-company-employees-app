@@ -20,7 +20,7 @@ class UserController extends Controller
     public function index()
     {
         return response()->json([
-            'users' => User::select('id', 'name', 'email')->get()
+            'data' => User::select('id', 'name', 'email')->get()
         ]);
     }
 
@@ -37,11 +37,12 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'roles' => 'required|array',
+            'roles.*' => 'integer',
         ]);
     
         if ($validator->fails()) {
@@ -54,6 +55,7 @@ class UserController extends Controller
                 'email' =>  $request->input('email'),
                 'password' => Hash::make($request->input('password'))
             ]);
+            $user->roles()->sync($request->input('roles'));
         } catch (\Exception $e) {
             return response()->json(['error' => 'User could not be created'], 500);
         }
@@ -68,7 +70,7 @@ class UserController extends Controller
     
         $sendgrid->send($email);
 
-        return response()->json(['message' => 'User created successfully', 'user' => $user]);
+        return response()->json(['message' => 'User created successfully', 'data' => $user]);
     }
 
     /**
@@ -96,6 +98,8 @@ class UserController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'roles' => 'required|array',
+            'roles.*' => 'integer',
         ]);
     
         if ($validator->fails()) {
@@ -109,6 +113,7 @@ class UserController extends Controller
                 'email' =>  $request->input('email'),
                 'password' => Hash::make($request->input('password'))
             ]);
+            $user->roles()->sync($request->input('roles'));
         } catch (\Exception $e) {
             return response()->json(['error' => 'User could not be updated'], 500);
         }
@@ -121,9 +126,15 @@ class UserController extends Controller
      */
     public function destroy(Request $request)
     {
-        $data = json_decode($request->ids);
+        $ids = json_decode($request->ids);
 
-        User::whereIn('id', $data)->delete();
+        $users = User::whereIn('id', $ids)->get();
+
+        $users->each(function ($user) {
+            $user->roles()->detach();
+        });
+
+        User::whereIn('id', $ids)->delete();
 
         return response()->json(['message' => 'User deleted successfully']);
     }

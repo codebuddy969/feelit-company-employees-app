@@ -9,12 +9,13 @@ import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Checkbox from "@mui/material/Checkbox";
 import Button from "@mui/material/Button";
+import ButtonGroup from "@mui/material/ButtonGroup";
 
 import DataTableHead from "./dataTableHead";
 import DataTableToolbar from "./dataTableToolbar";
 import DataTableModal from "./dataTableModal";
 
-import {useNavigate} from "react-router-dom";
+import {useNavigate, Link} from "react-router-dom";
 import {
     useGetMutation,
     useStoreMutation,
@@ -51,8 +52,9 @@ function stableSort(array, comparator) {
 }
 
 function TableCells({row}) {
+    const hiddenFields = ["id", "password"];
     return Object.keys(row).map(
-        (key) => key !== "id" && <TableCell key={key}>{row[key]}</TableCell>
+        (key) => !hiddenFields.includes(key) && <TableCell key={key}>{row[key]}</TableCell>
     );
 }
 
@@ -76,10 +78,10 @@ export default function DataTable({
 
     const navigate = useNavigate();
 
-    const [getAction, {getData, getError}] = useGetMutation();
-    const [storeAction, {storeData, storeError}] = useStoreMutation();
-    const [updateAction, {updateData, updateError}] = useUpdateMutation();
-    const [deleteAction, {deleteData, deleteError}] = useDeleteMutation();
+    const [getAction] = useGetMutation();
+    const [storeAction] = useStoreMutation();
+    const [updateAction] = useUpdateMutation();
+    const [deleteAction] = useDeleteMutation();
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === "asc";
@@ -121,50 +123,56 @@ export default function DataTable({
 
     const formSubmit = (event, id) => {
         event.preventDefault();
+
+        const proceedResponse = (response) => {
+            if (response.data && response.data.message) {
+                setModalInfo({opened: false});
+                alert(response.data.message);
+            } else {
+                alert("No time to proceed Errors");
+            }
+        };
+
         if (!id) {
             storeAction({
                 url: requestInfo.url,
                 body: requestInfo.body,
-            }).then((response) => {
-                if (response.data && response.data.message) {
-                    setModalInfo({opened: false});
-                    alert(response.data.message);
-                } else {
-                    alert("No time left to proceed Errors")
-                }
-            });
+            }).then((response) => proceedResponse(response));
         } else {
             updateAction({
                 url: `${requestInfo.url}/${requestInfo.id}`,
                 body: requestInfo.body,
-            }).then((response) => {
-                if (response.data && response.data.message) {
-                    setModalInfo({opened: false});
-                    alert(response.data.message);
-                } else {
-                    alert("No time left to proceed Errors")
-                }
-            });
+            }).then((response) => proceedResponse(response));
         }
     };
 
     useEffect(() => {
-        const error = getError || storeError || updateError || deleteError;
-        error && error.status === 401 && navigate("/login");
-    }, [getError, storeError, updateError, deleteError]);
-
-    useEffect(() => {
-        getAction({url: requestInfo.url}).then(
-            (response) =>
-                response.data &&
-                response.data.companies &&
-                SetRows(response.data[requestInfo.dataName])
-        );
+        getAction({url: requestInfo.url}).then((response) => {
+            response.error && response.error.status === 401 && navigate("/login");
+            response.data && response.data.data && SetRows(response.data.data);
+        });
     }, []);
 
     return (
         <Box sx={{maxWidth: 1200, mx: "auto", mt: 10}}>
+
+            {/* Pages Links */}
+
+            <ButtonGroup variant="contained" color="primary">
+                <Link to="/companies" className="link">
+                    <Button>Companies</Button>
+                </Link>
+                <Link to="/employees" className="link">
+                    <Button>Employees</Button>
+                </Link>
+                <Link to="/roles" className="link">
+                    <Button>Roles</Button>
+                </Link>
+            </ButtonGroup>
+
+
             <Paper sx={{width: "100%", mb: 2}}>
+
                 {/* Toolbar Component */}
 
                 <DataTableToolbar

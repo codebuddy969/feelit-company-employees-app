@@ -15,7 +15,7 @@ class CompanyController extends Controller
     public function index()
     {
         return response()->json([
-            'companies' => Company::select('id', 'name', 'email')->get()
+            'data' => Company::select('id', 'name', 'email')->get()
         ]);
     }
 

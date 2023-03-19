@@ -42,14 +42,10 @@ function Companies() {
     const headCells = [
         {
             id: "name",
-            numeric: false,
-            disablePadding: false,
             label: "Name",
         },
         {
             id: "email",
-            numeric: false,
-            disablePadding: false,
             label: "Email",
         },
     ];
@@ -61,7 +57,6 @@ function Companies() {
             requestInfo={{
                 id: editableInfo.id,
                 url: "companies",
-                dataName: "companies",
                 body: {name: editableInfo.name, email: editableInfo.email},
             }}
             onSelectingRowForEdit={(info) =>
