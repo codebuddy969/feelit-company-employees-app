@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Company;
 
 class CompanyController extends Controller
 {
@@ -11,7 +12,9 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'companies' => Company::all()
+        ]);
     }
 
     /**
@@ -27,7 +30,17 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'unique:companies,email'],
+        ]);
+
+        $company = Company::create([
+            'name' => $validatedData['name'],
+            'email' => $validatedData['email'],
+        ]);
+
+        return response()->json(['message' => 'Company created successfully', 'data' => $company]);
     }
 
     /**
@@ -51,7 +64,17 @@ class CompanyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => ['required', 'string'],
+            'email' => ['required', 'string', 'email', 'unique:companies,email'],
+        ]);
+    
+        $company = Company::findOrFail($id);
+        $company->name = $validatedData['name'];
+        $company->email = $validatedData['email'];
+        $company->update();
+    
+        return response()->json(['message' => 'Company updated successfully', 'company' => $company]);
     }
 
     /**
