@@ -15,7 +15,8 @@ export default function DataTableToolbar({
     numSelected,
     tableName = "Table name",
     onAdd,
-    onEdit
+    onEdit,
+    onDelete
 }) {
     return (
         <Toolbar
@@ -59,7 +60,7 @@ export default function DataTableToolbar({
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Delete">
-                        <IconButton>
+                        <IconButton onClick={onDelete}>
                             <DeleteIcon />
                         </IconButton>
                     </Tooltip>
@@ -76,8 +77,3 @@ export default function DataTableToolbar({
         </Toolbar>
     );
 }
-
-DataTableToolbar.propTypes = {
-    numSelected: PropTypes.number.isRequired,
-    tableName: PropTypes.string.isRequired,
-};

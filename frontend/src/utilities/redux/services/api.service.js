@@ -5,11 +5,23 @@ export const serverApi = createApi({
     baseQuery: fetchBaseQuery({
         baseUrl: "http://localhost:8000/api",
         prepareHeaders: (headers) => {
-            const token = localStorage.getItem('bearerToken');
+            const token = localStorage.getItem("bearerToken");
             if (token) {
                 headers.set("Authorization", `Bearer ${token}`);
             }
+            headers.set("Content-Type", "application/json");
+            headers.set("Accept", "application/json");
             return headers;
+        },
+        responseHandler: async (response) => {
+            console.log("asdsadas");
+            const data = await response.json();
+
+            // Add a custom property to the response data
+            data.customProperty = "Custom property value";
+
+            // Return the modified response data
+            return {data, status: response.status};
         },
     }),
     endpoints: (builder) => ({
@@ -27,7 +39,7 @@ export const serverApi = createApi({
         }),
         update: builder.mutation({
             query: (data) => ({
-                url: `${data.url}/${data.id}`,
+                url: data.url,
                 method: "PUT",
                 body: data.body,
             }),

@@ -3,6 +3,7 @@ import {Box} from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import DataTable from "../../components/dataTable";
+import {useNavigate} from "react-router-dom";
 
 import { useGetMutation } from "../../utilities/redux/services/api.service";
 
@@ -40,7 +41,9 @@ function Roles() {
 
     const [editableInfo, SetEditableInfo] = useState({name: ""});
 
-    const [getData] = useGetMutation();
+    const navigate = useNavigate();
+
+    const [getData, {data, error}] = useGetMutation();
 
     const headCells = [
         {
@@ -52,7 +55,16 @@ function Roles() {
     ];
 
     useEffect(() => {
-        getData({url: "roles"}).then(response => SetRows(response.data.roles));
+        error && error.status === 401 && navigate("/login");
+    }, [error]);
+
+    useEffect(() => {
+        getData({url: "roles"}).then(
+            (response) =>
+                response.data &&
+                response.data.companies &&
+                SetRows(response.data.roles)
+        );
     }, []);
 
     return (

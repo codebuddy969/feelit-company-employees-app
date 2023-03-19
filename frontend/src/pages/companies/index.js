@@ -1,62 +1,43 @@
-import React, {useState, useEffect} from "react";
-import {Box} from "@mui/material";
+import React, {useEffect, useState} from "react";
 import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
 import DataTable from "../../components/dataTable";
 
-import { useGetMutation, useStoreMutation } from "../../utilities/redux/services/api.service";
-
-function Modal({name = "", email = ""}) {
+function Modal({name = "", email = "", id = null, onEditFields}) {
     const [companyName, setCompanyName] = useState(name);
     const [companyEmail, setCompanyEmail] = useState(email);
 
-    const [storeData] = useStoreMutation();
-
-    const handleSubmit = (event) => {
-        event.preventDefault();
-        
-        storeData({url: "companies", body: {email: companyEmail, name: companyName}}).then(response => {
-            if (response.data && response.data.message) {
-                alert(response.data.message);
-            } else {
-                alert("Error message still should be proceeded");
-            }
-        });
-    };
+    useEffect(() => {
+        onEditFields({name: companyName, email: companyEmail, id});
+    }, [companyName, companyEmail]);
 
     return (
-        <Box sx={{maxWidth: 400, mx: "auto"}}>
-            <form onSubmit={handleSubmit}>
-                <TextField
-                    label="Company name"
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    fullWidth
-                    margin="normal"
-                    className="input"
-                />
-                <TextField
-                    label="Company email"
-                    value={companyEmail}
-                    onChange={(e) => setCompanyEmail(e.target.value)}
-                    fullWidth
-                    margin="normal"
-                    type="text"
-                />
-                <Button type="submit" variant="contained" sx={{mt: 3}}>
-                    Submit
-                </Button>
-            </form>
-        </Box>
+        <>
+            <TextField
+                label="Company name"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                fullWidth
+                margin="normal"
+                className="input"
+            />
+            <TextField
+                label="Company email"
+                value={companyEmail}
+                onChange={(e) => setCompanyEmail(e.target.value)}
+                fullWidth
+                margin="normal"
+                type="text"
+            />
+        </>
     );
 }
 
 function Companies() {
-
-    const [rows, SetRows] = useState([]);
-    const [editableInfo, SetEditableInfo] = useState({name: "", email: ""});
-
-    const [getData] = useGetMutation();
+    const [editableInfo, SetEditableInfo] = useState({
+        name: "",
+        email: "",
+        id: null,
+    });
 
     const headCells = [
         {
@@ -70,23 +51,33 @@ function Companies() {
             numeric: false,
             disablePadding: false,
             label: "Email",
-        }
+        },
     ];
 
-    useEffect(() => {
-        getData({url: "companies"}).then(response => SetRows(response.data.companies));
-    }, []);
-
     return (
-        <Box sx={{maxWidth: 1200, mx: "auto", mt: 10}}>
-            <DataTable
-                tableName="Companies"
-                headCells={headCells}
-                rows={rows}
-                onSelectingRowForEdit={(info) => SetEditableInfo(info ?? {name: "", email: ""})}
-                modalContent={<Modal name={editableInfo.name} email={editableInfo.email} />}
-            />
-        </Box>
+        <DataTable
+            tableName="Companies"
+            headCells={headCells}
+            requestInfo={{
+                id: editableInfo.id,
+                url: "companies",
+                dataName: "companies",
+                body: {name: editableInfo.name, email: editableInfo.email},
+            }}
+            onSelectingRowForEdit={(info) =>
+                SetEditableInfo(info ?? {name: "", email: "", id: null})
+            }
+            modalContent={
+                <Modal
+                    name={editableInfo.name}
+                    email={editableInfo.email}
+                    id={editableInfo.id}
+                    onEditFields={(info) =>
+                        SetEditableInfo(info ?? {name: "", email: "", id: null})
+                    }
+                />
+            }
+        />
     );
 }
 

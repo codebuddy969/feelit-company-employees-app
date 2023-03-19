@@ -3,8 +3,12 @@ import {Box} from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import DataTable from "../../components/dataTable";
+import {useNavigate} from "react-router-dom";
 
-import { useGetMutation } from "../../utilities/redux/services/api.service";
+import {
+    useStoreMutation,
+    useUpdateMutation,
+} from "../../utilities/redux/services/api.service";
 
 function Modal({name = "", email = ""}) {
     const [employeeName, setEmployeeName] = useState(name);
@@ -46,10 +50,7 @@ function Modal({name = "", email = ""}) {
 
 function Employees() {
 
-    const [rows, SetRows] = useState([]);
     const [editableInfo, SetEditableInfo] = useState({name: "", email: ""});
-
-    const [getData] = useGetMutation();
 
     const headCells = [
         {
@@ -66,18 +67,23 @@ function Employees() {
         }
     ];
 
-    useEffect(() => {
-        getData({url: "employees"}).then(response => SetRows(response.data.users));
-    }, []);
-
     return (
+
         <Box sx={{maxWidth: 1200, mx: "auto", mt: 10}}>
             <DataTable
                 tableName="Employees"
                 headCells={headCells}
-                rows={rows}
-                onSelectingRowForEdit={(info) => SetEditableInfo(info ?? {name: "", email: ""})}
-                modalContent={<Modal name={editableInfo.name} email={editableInfo.email} />}
+                requestInfo={{url: "employees", dataName: "users"}}
+                onSelectingRowForEdit={(info) =>
+                    SetEditableInfo(info ?? {name: "", email: "", id: null})
+                }
+                modalContent={
+                    <Modal
+                        name={editableInfo.name}
+                        email={editableInfo.email}
+                        id={editableInfo.id}
+                    />
+                }
             />
         </Box>
     );

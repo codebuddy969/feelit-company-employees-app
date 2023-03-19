@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, {useState, useEffect} from "react";
 import Box from "@mui/material/Box";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -8,10 +8,19 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Checkbox from "@mui/material/Checkbox";
+import Button from "@mui/material/Button";
 
 import DataTableHead from "./dataTableHead";
 import DataTableToolbar from "./dataTableToolbar";
 import DataTableModal from "./dataTableModal";
+
+import {useNavigate} from "react-router-dom";
+import {
+    useGetMutation,
+    useStoreMutation,
+    useUpdateMutation,
+    useDeleteMutation,
+} from "../../utilities/redux/services/api.service";
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) {
@@ -49,20 +58,28 @@ function TableCells({row}) {
 
 export default function DataTable({
     tableName,
+    requestInfo = {url: "", dataName: ""},
     headCells = [],
-    rows = [],
     modalContent,
     onSelectingRowForEdit,
 }) {
-    const [order, setOrder] = React.useState("asc");
-    const [orderBy, setOrderBy] = React.useState("name");
-    const [selected, setSelected] = React.useState([]);
-    const [page, setPage] = React.useState(0);
-    const [rowsPerPage, setRowsPerPage] = React.useState(10);
-    const [modalInfo, setModalInfo] = React.useState({
+    const [order, setOrder] = useState("asc");
+    const [orderBy, setOrderBy] = useState("name");
+    const [selected, setSelected] = useState([]);
+    const [page, setPage] = useState(0);
+    const [rows, SetRows] = useState([]);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [modalInfo, setModalInfo] = useState({
         opened: false,
         title: "Modal",
     });
+
+    const navigate = useNavigate();
+
+    const [getAction, {getData, getError}] = useGetMutation();
+    const [storeAction, {storeData, storeError}] = useStoreMutation();
+    const [updateAction, {updateData, updateError}] = useUpdateMutation();
+    const [deleteAction, {deleteData, deleteError}] = useDeleteMutation();
 
     const handleRequestSort = (event, property) => {
         const isAsc = orderBy === property && order === "asc";
@@ -89,8 +106,64 @@ export default function DataTable({
         setSelected(selectedIdsList);
     };
 
+    const deleteRows = () => {
+        deleteAction({
+            url: requestInfo.url,
+            body: {ids: JSON.stringify(selected)},
+        }).then((response) => {
+            alert(
+                response.data && response.data.message
+                    ? response.data.message
+                    : "Error not proceeded"
+            );
+        });
+    };
+
+    const formSubmit = (event, id) => {
+        event.preventDefault();
+        if (!id) {
+            storeAction({
+                url: requestInfo.url,
+                body: requestInfo.body,
+            }).then((response) => {
+                if (response.data && response.data.message) {
+                    setModalInfo({opened: false});
+                    alert(response.data.message);
+                } else {
+                    alert("No time left to proceed Errors")
+                }
+            });
+        } else {
+            updateAction({
+                url: `${requestInfo.url}/${requestInfo.id}`,
+                body: requestInfo.body,
+            }).then((response) => {
+                if (response.data && response.data.message) {
+                    setModalInfo({opened: false});
+                    alert(response.data.message);
+                } else {
+                    alert("No time left to proceed Errors")
+                }
+            });
+        }
+    };
+
+    useEffect(() => {
+        const error = getError || storeError || updateError || deleteError;
+        error && error.status === 401 && navigate("/login");
+    }, [getError, storeError, updateError, deleteError]);
+
+    useEffect(() => {
+        getAction({url: requestInfo.url}).then(
+            (response) =>
+                response.data &&
+                response.data.companies &&
+                SetRows(response.data[requestInfo.dataName])
+        );
+    }, []);
+
     return (
-        <Box sx={{width: "100%"}}>
+        <Box sx={{maxWidth: 1200, mx: "auto", mt: 10}}>
             <Paper sx={{width: "100%", mb: 2}}>
                 {/* Toolbar Component */}
 
@@ -112,6 +185,7 @@ export default function DataTable({
                             alert("Only one item should be selected");
                         }
                     }}
+                    onDelete={deleteRows}
                 />
 
                 <TableContainer>
@@ -177,7 +251,22 @@ export default function DataTable({
                     modalInfo={modalInfo}
                     onCloseModal={() => setModalInfo({opened: false})}
                 >
-                    {modalContent}
+                    <Box sx={{maxWidth: 400, mx: "auto"}}>
+                        <form
+                            onSubmit={(event) =>
+                                formSubmit(event, requestInfo.id)
+                            }
+                        >
+                            {modalContent}
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                sx={{mt: 3}}
+                            >
+                                Submit
+                            </Button>
+                        </form>
+                    </Box>
                 </DataTableModal>
             </Paper>
         </Box>
