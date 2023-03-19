@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Role;
 
 class RoleController extends Controller
 {
@@ -11,7 +12,9 @@ class RoleController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json([
+            'roles' => Role::all()
+        ]);
     }
 
     /**
@@ -27,7 +30,15 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'name' => ['required', 'string'],
+        ]);
+
+        $role = Role::create([
+            'name' => $validatedData['name']
+        ]);
+
+        return response()->json(['message' => 'Role created successfully', 'data' => $role]);
     }
 
     /**
@@ -51,14 +62,27 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'name' => 'required|string'
+        ]);
+
+        $role = Role::findOrFail($id);
+        $role->update([
+            'name' =>  $request->input('name')
+        ]);
+
+        return response()->json(['message' => 'Role updated successfully', 'data' => $role]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        //
+        $data = json_decode($request->ids);
+
+        Role::whereIn('id', $data)->delete();
+
+        return response()->json(['message' => 'Roles deleted successfully']);
     }
 }

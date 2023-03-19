@@ -64,24 +64,29 @@ class CompanyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validatedData = $request->validate([
-            'name' => ['required', 'string'],
-            'email' => ['required', 'string', 'email', 'unique:companies,email'],
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email',
         ]);
-    
+
         $company = Company::findOrFail($id);
-        $company->name = $validatedData['name'];
-        $company->email = $validatedData['email'];
-        $company->update();
-    
-        return response()->json(['message' => 'Company updated successfully', 'company' => $company]);
+        $company->update([
+            'name' =>  $request->input('name'),
+            'email' =>  $request->input('email')
+        ]);
+
+        return response()->json(['message' => 'Company updated successfully', 'data' => $company]);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request)
     {
-        //
+        $data = json_decode($request->ids);
+
+        Company::whereIn('id', $data)->delete();
+
+        return response()->json(['message' => 'Companies deleted successfully']);
     }
 }

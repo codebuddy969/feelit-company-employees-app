@@ -37,8 +37,42 @@ Route::middleware('auth:sanctum')->controller(CompanyController::class)->group(f
 
     Route::put('companies/{company}', 'update')->name('companies.update');
 
-    Route::delete('companies/{company}', 'destroy')->name('companies.destroy');
+    Route::delete('companies', 'destroy')->name('companies.destroy');
 
     Route::get('companies/{company}/edit', 'edit')->name('companies.edit');
 
+});
+
+Route::middleware('auth:sanctum')->controller(RoleController::class)->group(function(){
+
+    Route::get('roles', 'index')->name('roles.index');
+
+    Route::post('roles', 'store')->name('roles.store');
+
+    Route::get('roles/create', 'create')->name('roles.create');
+
+    Route::get('roles/{role}', 'show')->name('roles.show');
+
+    Route::put('roles/{role}', 'update')->name('roles.update');
+
+    Route::delete('roles', 'destroy')->name('roles.destroy');
+
+    Route::get('roles/{role}/edit', 'edit')->name('roles.edit');
+});
+
+Route::middleware('auth:sanctum')->controller(UserController::class)->group(function(){
+
+    Route::get('employees', 'index')->name('employees.index');
+
+    Route::post('employees', 'store')->name('employees.store');
+
+    Route::get('employees/create', 'create')->name('employees.create');
+
+    Route::get('employees/{employee}', 'show')->name('employees.show');
+
+    Route::put('employees/{employee}', 'update')->name('employees.update');
+
+    Route::delete('employees', 'destroy')->name('employees.destroy');
+
+    Route::get('employees/{employee}/edit', 'edit')->name('employees.edit');
 });
