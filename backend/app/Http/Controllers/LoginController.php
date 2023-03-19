@@ -16,11 +16,11 @@ class LoginController extends Controller
             $user = Auth::user();
             $expiresAt = Carbon::now()->addDays(7);
 
-            $token = $user->createToken('MyAppToken')->plainTextToken;
+            $token = $user->createToken('Token')->plainTextToken;
 
             $user->tokens()->where('tokenable_id', $user->id)->latest('created_at')->first()->forceFill([
                 'last_used_at' => Carbon::now(),
-                'expires_at' => Carbon::now()->addMinutes(30),
+                'expires_at' => Carbon::now()->addMinutes(180),
             ])->save();
 
             return response()->json([

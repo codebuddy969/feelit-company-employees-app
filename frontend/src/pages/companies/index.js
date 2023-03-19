@@ -1,18 +1,27 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {Box} from "@mui/material";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import DataTable from "../../components/dataTable";
 
+import { useGetMutation, useStoreMutation } from "../../utilities/redux/services/api.service";
+
 function Modal({name = "", email = ""}) {
     const [companyName, setCompanyName] = useState(name);
     const [companyEmail, setCompanyEmail] = useState(email);
 
+    const [storeData] = useStoreMutation();
+
     const handleSubmit = (event) => {
         event.preventDefault();
-        // Here you would typically make an API call to authenticate the user
-        console.log("Useremail:", companyName);
-        console.log("Password:", companyEmail);
+        
+        storeData({url: "companies", body: {email: companyEmail, name: companyName}}).then(response => {
+            if (response.data && response.data.message) {
+                alert(response.data.message);
+            } else {
+                alert("Error message still should be proceeded");
+            }
+        });
     };
 
     return (
@@ -44,7 +53,10 @@ function Modal({name = "", email = ""}) {
 
 function Companies() {
 
+    const [rows, SetRows] = useState([]);
     const [editableInfo, SetEditableInfo] = useState({name: "", email: ""});
+
+    const [getData] = useGetMutation();
 
     const headCells = [
         {
@@ -61,19 +73,9 @@ function Companies() {
         }
     ];
 
-    const rows = [
-        {id: 1, name: "Some company", email: "aompany@company.com"},
-        {id: 2, name: "Some company", email: "company@company.com"},
-        {id: 3, name: "Some company", email: "company@company.com"},
-        {id: 4, name: "Some company", email: "company@company.com"},
-        {id: 5, name: "Some company", email: "company@company.com"},
-        {id: 6, name: "Some company", email: "company@company.com"},
-        {id: 7, name: "Some company", email: "company@company.com"},
-        {id: 8, name: "Some company", email: "company@company.com"},
-        {id: 9, name: "Some company", email: "company@company.com"},
-        {id: 10, name: "Some company", email: "company@company.com"},
-        {id: 11, name: "Some company", email: "zompany@company.com"}
-    ];
+    useEffect(() => {
+        getData({url: "companies"}).then(response => SetRows(response.data.companies));
+    }, []);
 
     return (
         <Box sx={{maxWidth: 1200, mx: "auto", mt: 10}}>

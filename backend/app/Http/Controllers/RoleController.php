@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Role;
 
+use Illuminate\Support\Facades\Validator;
+
 class RoleController extends Controller
 {
     /**
@@ -13,7 +15,7 @@ class RoleController extends Controller
     public function index()
     {
         return response()->json([
-            'roles' => Role::all()
+            'roles' => Role::select('id', 'name')->get()
         ]);
     }
 
@@ -30,13 +32,21 @@ class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => ['required', 'string'],
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string'
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $role = Role::create([
-            'name' => $validatedData['name']
-        ]);
+        try {
+            $role = Role::create([
+                'name' => $request->input('name')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Role could not be created'], 500);
+        }
 
         return response()->json(['message' => 'Role created successfully', 'data' => $role]);
     }
@@ -62,14 +72,22 @@ class RoleController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string'
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $role = Role::findOrFail($id);
-        $role->update([
-            'name' =>  $request->input('name')
-        ]);
+        try {
+            $role = Role::findOrFail($id);
+            $role->update([
+                'name' =>  $request->input('name')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Role could not be created'], 500);
+        }
 
         return response()->json(['message' => 'Role updated successfully', 'data' => $role]);
     }

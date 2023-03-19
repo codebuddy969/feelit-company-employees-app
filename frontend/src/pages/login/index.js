@@ -1,23 +1,23 @@
 import React, {useState} from "react";
+import { useNavigate } from "react-router-dom";
 import {TextField, Button, Box} from "@mui/material";
+
+import { useStoreMutation } from "../../utilities/redux/services/api.service";
 
 function LoginPage() {
     const [useremail, setUserEmail] = useState("");
     const [password, setPassword] = useState("");
 
-    const handleUserEmailChange = (event) => {
-        setUserEmail(event.target.value);
-    };
+    const navigate = useNavigate();
 
-    const handlePasswordChange = (event) => {
-        setPassword(event.target.value);
-    };
+    const [loginData] = useStoreMutation();
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        // Here you would typically make an API call to authenticate the user
-        console.log("Useremail:", useremail);
-        console.log("Password:", password);
+        loginData({url: "login", body: {email: useremail, password: password}}).then(response => {
+            localStorage.setItem('bearerToken', response.data.token);
+            navigate("/companies");
+        });
     };
 
     return (
@@ -27,7 +27,7 @@ function LoginPage() {
                 <TextField
                     label="Useremail"
                     value={useremail}
-                    onChange={handleUserEmailChange}
+                    onChange={(event) => setUserEmail(event.target.value)}
                     fullWidth
                     margin="normal"
                     className="input"
@@ -35,7 +35,7 @@ function LoginPage() {
                 <TextField
                     label="Password"
                     value={password}
-                    onChange={handlePasswordChange}
+                    onChange={(event) => setPassword(event.target.value)}
                     fullWidth
                     margin="normal"
                     type="password"

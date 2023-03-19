@@ -92,7 +92,6 @@ export default function DataTable({
     return (
         <Box sx={{width: "100%"}}>
             <Paper sx={{width: "100%", mb: 2}}>
-
                 {/* Toolbar Component */}
 
                 <DataTableToolbar
@@ -104,7 +103,10 @@ export default function DataTable({
                     }}
                     onEdit={() => {
                         if (selected.length === 1) {
-                            onSelectingRowForEdit(rows[selected[0]]);
+                            const row = rows.filter(
+                                (row) => row.id === selected[0]
+                            );
+                            onSelectingRowForEdit(row[0]);
                             setModalInfo({opened: true, title: "Edit Record"});
                         } else {
                             alert("Only one item should be selected");

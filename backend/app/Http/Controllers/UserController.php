@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use SendGrid\Mail\Mail;
+use SendGrid;
+
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
+
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -15,7 +20,7 @@ class UserController extends Controller
     public function index()
     {
         return response()->json([
-            'users' => User::all()
+            'users' => User::select('id', 'name', 'email')->get()
         ]);
     }
 
@@ -32,19 +37,38 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $user = User::create([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-            'password' => Hash::make($validatedData['password'])
-        ]);
+        try {
+            $user = User::create([
+                'name' =>  $request->input('name'),
+                'email' =>  $request->input('email'),
+                'password' => Hash::make($request->input('password'))
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'User could not be created'], 500);
+        }
 
-        return response()->json(['message' => 'User created successfully', 'data' => $user]);
+        $email = new Mail();
+        $email->setFrom(env('MAIL_FROM_ADDRESS'), "Vlad Secrier");
+        $email->setSubject("User Created");
+        $email->addTo("mymailboxmd@gmail.com", "Recipient");
+        $email->addContent("text/plain", "Hello, this is a test email from the app!");
+    
+        $sendgrid = new SendGrid(env('MAIL_USERNAME'));
+    
+        $sendgrid->send($email);
+
+        return response()->json(['message' => 'User created successfully', 'user' => $user]);
     }
 
     /**
@@ -68,18 +92,26 @@ class UserController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $user = User::findOrFail($id);
-        $user->update([
-            'name' =>  $request->input('name'),
-            'email' =>  $request->input('email'),
-            'password' => Hash::make($request->input('password'))
-        ]);
+        try {
+            $user = User::findOrFail($id);
+            $user->update([
+                'name' =>  $request->input('name'),
+                'email' =>  $request->input('email'),
+                'password' => Hash::make($request->input('password'))
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'User could not be updated'], 500);
+        }
 
         return response()->json(['message' => 'User updated successfully', 'data' => $user]);
     }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Company;
 
+use Illuminate\Support\Facades\Validator;
+
 class CompanyController extends Controller
 {
     /**
@@ -13,7 +15,7 @@ class CompanyController extends Controller
     public function index()
     {
         return response()->json([
-            'companies' => Company::all()
+            'companies' => Company::select('id', 'name', 'email')->get()
         ]);
     }
 
@@ -30,15 +32,23 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => ['required', 'string'],
-            'email' => ['required', 'string', 'email', 'unique:companies,email'],
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:companies,email'
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $company = Company::create([
-            'name' => $validatedData['name'],
-            'email' => $validatedData['email'],
-        ]);
+        try {
+            $company = Company::create([
+                'name' =>  $request->input('name'),
+                'email' =>  $request->input('email')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Comapny could not be created'], 500);
+        }
 
         return response()->json(['message' => 'Company created successfully', 'data' => $company]);
     }
@@ -64,17 +74,25 @@ class CompanyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string',
-            'email' => 'required|email',
+            'email' => 'required|email|unique:companies,email'
         ]);
+    
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        $company = Company::findOrFail($id);
-        $company->update([
-            'name' =>  $request->input('name'),
-            'email' =>  $request->input('email')
-        ]);
-
+        try {
+            $company = Company::findOrFail($id);
+            $company->update([
+                'name' =>  $request->input('name'),
+                'email' =>  $request->input('email')
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Comapny could not be updated'], 500);
+        }
+        
         return response()->json(['message' => 'Company updated successfully', 'data' => $company]);
     }
 
