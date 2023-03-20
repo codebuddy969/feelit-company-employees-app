@@ -7,11 +7,6 @@ use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
-    public function isAdmin(User $user)
-    {
-        return true;
-    }
-
     /**
      * Determine whether the user can view any models.
      */
@@ -66,5 +61,10 @@ class UserPolicy
     public function forceDelete(User $user, User $model): bool
     {
         //
+    }
+
+    public function viewAsAdmin(User $user)
+    {
+        return $user->hasRole('admin');
     }
 }

@@ -54,11 +54,13 @@ export default function DataTableToolbar({
 
             {numSelected > 0 ? (
                 <ButtonGroup>
-                    <Tooltip title="Edit">
-                        <IconButton onClick={onEdit}>
-                            <EditIcon />
-                        </IconButton>
-                    </Tooltip>
+                    {numSelected === 1 && (
+                        <Tooltip title="Edit">
+                            <IconButton onClick={onEdit}>
+                                <EditIcon />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                     <Tooltip title="Delete">
                         <IconButton onClick={onDelete}>
                             <DeleteIcon />

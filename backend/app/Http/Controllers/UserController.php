@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Company;
 
 use Illuminate\Support\Facades\Validator;
 
@@ -19,8 +20,13 @@ class UserController extends Controller
      */
     public function index()
     {
+        $users = User::join('companies', 'companies.id', '=', 'users.company_id')
+              ->select('users.id', 'users.name', 'users.email', 'companies.id as company_id', 'companies.name as company_name')
+              ->with('roles')
+              ->get();
+        
         return response()->json([
-            'data' => User::select('id', 'name', 'email')->get()
+            'data' => $users
         ]);
     }
 
@@ -41,16 +47,18 @@ class UserController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'company_id' => 'required|integer',
             'roles' => 'required|array',
             'roles.*' => 'integer',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
         try {
             $user = User::create([
+                'company_id' =>  $request->input('company_id'),
                 'name' =>  $request->input('name'),
                 'email' =>  $request->input('email'),
                 'password' => Hash::make($request->input('password'))
@@ -65,9 +73,9 @@ class UserController extends Controller
         $email->setSubject("User Created");
         $email->addTo("mymailboxmd@gmail.com", "Recipient");
         $email->addContent("text/plain", "Hello, this is a test email from the app!");
-    
+
         $sendgrid = new SendGrid(env('MAIL_USERNAME'));
-    
+
         $sendgrid->send($email);
 
         return response()->json(['message' => 'User created successfully', 'data' => $user]);
@@ -98,10 +106,11 @@ class UserController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
+            'company_id' => 'required|integer',
             'roles' => 'required|array',
             'roles.*' => 'integer',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
@@ -109,6 +118,7 @@ class UserController extends Controller
         try {
             $user = User::findOrFail($id);
             $user->update([
+                'company_id' =>  $request->input('company_id'),
                 'name' =>  $request->input('name'),
                 'email' =>  $request->input('email'),
                 'password' => Hash::make($request->input('password'))

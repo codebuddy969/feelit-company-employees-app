@@ -52,9 +52,12 @@ function stableSort(array, comparator) {
 }
 
 function TableCells({row}) {
-    const hiddenFields = ["id", "password"];
+    const hiddenFields = ["id", "password", "roles", "companies"];
     return Object.keys(row).map(
-        (key) => !hiddenFields.includes(key) && <TableCell key={key}>{row[key]}</TableCell>
+        (key) =>
+            !hiddenFields.includes(key) && (
+                <TableCell key={key}>{row[key]}</TableCell>
+            )
     );
 }
 
@@ -128,8 +131,9 @@ export default function DataTable({
             if (response.data && response.data.message) {
                 setModalInfo({opened: false});
                 alert(response.data.message);
+                window.location.reload();
             } else {
-                alert("No time to proceed Errors");
+                alert("Check Errors in inspector");
             }
         };
 
@@ -148,14 +152,15 @@ export default function DataTable({
 
     useEffect(() => {
         getAction({url: requestInfo.url}).then((response) => {
-            response.error && response.error.status === 401 && navigate("/login");
+            response.error &&
+                [401].includes(response.error.status) &&
+                navigate("/");
             response.data && response.data.data && SetRows(response.data.data);
         });
     }, []);
 
     return (
         <Box sx={{maxWidth: 1200, mx: "auto", mt: 10}}>
-
             {/* Pages Links */}
 
             <ButtonGroup variant="contained" color="primary">
@@ -170,9 +175,7 @@ export default function DataTable({
                 </Link>
             </ButtonGroup>
 
-
             <Paper sx={{width: "100%", mb: 2}}>
-
                 {/* Toolbar Component */}
 
                 <DataTableToolbar
@@ -183,15 +186,11 @@ export default function DataTable({
                         setModalInfo({opened: true, title: "Add Record"});
                     }}
                     onEdit={() => {
-                        if (selected.length === 1) {
-                            const row = rows.filter(
-                                (row) => row.id === selected[0]
-                            );
-                            onSelectingRowForEdit(row[0]);
-                            setModalInfo({opened: true, title: "Edit Record"});
-                        } else {
-                            alert("Only one item should be selected");
-                        }
+                        const row = rows.filter(
+                            (row) => row.id === selected[0]
+                        );
+                        onSelectingRowForEdit(row[0]);
+                        setModalInfo({opened: true, title: "Edit Record"});
                     }}
                     onDelete={deleteRows}
                 />

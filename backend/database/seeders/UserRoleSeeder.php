@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Role;
 
-class RoleUserSeeder extends Seeder
+class UserRoleSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -16,12 +16,12 @@ class RoleUserSeeder extends Seeder
     public function run(): void
     {
         // Get the admin role
-        $admin_role = Role::where('name', 'admin')->firstOrFail();
+        $role = Role::where('name', 'admin')->firstOrFail();
 
         // Get all users and assign the admin role to each one
         $users = User::all();
         foreach ($users as $user) {
-            $user->roles()->sync([$admin_role->id]);
+            $user->roles()->sync([$role->id]);
         }
     }
 }

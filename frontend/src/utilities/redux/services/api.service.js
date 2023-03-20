@@ -12,17 +12,7 @@ export const serverApi = createApi({
             headers.set("Content-Type", "application/json");
             headers.set("Accept", "application/json");
             return headers;
-        },
-        responseHandler: async (response) => {
-            console.log("asdsadas");
-            const data = await response.json();
-
-            // Add a custom property to the response data
-            data.customProperty = "Custom property value";
-
-            // Return the modified response data
-            return {data, status: response.status};
-        },
+        }
     }),
     endpoints: (builder) => ({
         get: builder.mutation({

@@ -1,8 +1,8 @@
 import React, {useState, useEffect} from "react";
 import TextField from "@mui/material/TextField";
 import DataTable from "../../components/dataTable";
-import Chips from "../../components/chips";
-import SelectComponent from "../../components/select";
+import BasicSelect from "../../components/basicSelect";
+import MultipleSelectCheckmarks from "../../components/multipleSelectCheckmarks";
 import {useGetMutation} from "../../utilities/redux/services/api.service";
 
 function Modal({
@@ -10,46 +10,44 @@ function Modal({
     email = "",
     password = "",
     roles = [],
-    companies = [],
+    company_id = "",
     id = null,
     onEditFields,
 }) {
-    const [employeeCompanies, setEmployeeCompanies] = useState(companies);
     const [employeeRoles, setEmployeeRoles] = useState(roles);
+    const [employeeCompany, setEmployeeCompany] = useState(company_id);
     const [employeeName, setEmployeeName] = useState(name);
     const [employeeEmail, setEmployeeEmail] = useState(email);
     const [employeePassword, setEmployeePassword] = useState(password);
 
+    const [companiesList, setCompaniesList] = useState([]);
+    const [rolesList, setRolesList] = useState([]);
+
     const [getAction] = useGetMutation();
 
-    useEffect(() => {
+    const onFieldChanged = (stateModifier) => {
+        stateModifier();
         onEditFields({
             name: employeeName,
             email: employeeEmail,
             password: employeePassword,
             roles: employeeRoles,
-            companies: employeeCompanies,
+            company_id: employeeCompany,
             id,
         });
-    }, [
-        employeeName,
-        employeeEmail,
-        employeePassword,
-        employeeRoles,
-        employeeCompanies,
-    ]);
+    }
 
     useEffect(() => {
         getAction({url: "roles"}).then((response) => {
             response.data &&
                 response.data.data &&
-                setEmployeeRoles(response.data.data);
+                setRolesList(response.data.data);
         });
 
         getAction({url: "companies"}).then((response) => {
             response.data &&
                 response.data.data &&
-                setEmployeeCompanies(response.data.data);
+                setCompaniesList(response.data.data);
         });
     }, []);
 
@@ -58,7 +56,7 @@ function Modal({
             <TextField
                 label="Employee name"
                 value={employeeName}
-                onChange={(e) => setEmployeeName(e.target.value)}
+                onChange={(e) => onFieldChanged(() => setEmployeeName(e.target.value))}
                 fullWidth
                 margin="normal"
                 className="input"
@@ -66,7 +64,7 @@ function Modal({
             <TextField
                 label="Employee email"
                 value={employeeEmail}
-                onChange={(e) => setEmployeeEmail(e.target.value)}
+                onChange={(e) => onFieldChanged(() => setEmployeeEmail(e.target.value))}
                 fullWidth
                 margin="normal"
                 type="text"
@@ -74,22 +72,40 @@ function Modal({
             <TextField
                 label="Employee password"
                 value={employeePassword}
-                onChange={(e) => setEmployeePassword(e.target.value)}
+                onChange={(e) => onFieldChanged(() => setEmployeePassword(e.target.value))}
                 fullWidth
                 margin="normal"
                 type="password"
             />
-            <SelectComponent companies={employeeCompanies} />
-            <Chips
-                chips={employeeRoles}
-                onDelete={(chips) => setEmployeeRoles(chips)}
+            <BasicSelect
+                label="Company"
+                rows={companiesList}
+                selected={employeeCompany}
+                onChange={(id) => onFieldChanged(() => setEmployeeCompany(id))}
+            />
+            <MultipleSelectCheckmarks
+                label="Roles"
+                rows={rolesList}
+                initialList={() => {
+                    const names = [];
+                    employeeRoles.forEach(role => names.push(role.name));
+                    return names;
+                }}
+                onSelect={(info) => onFieldChanged(() => setEmployeeRoles(info))}
             />
         </>
     );
 }
 
 function Employees() {
-    const defaults = {name: "", email: "", password: "", roles: [], id: null};
+    const defaults = {
+        name: "",
+        email: "",
+        password: "",
+        roles: [],
+        company_id: "",
+        id: null,
+    };
 
     const [editableInfo, SetEditableInfo] = useState(defaults);
 
@@ -122,6 +138,7 @@ function Employees() {
                         );
                         return ids;
                     })(),
+                    company_id: editableInfo.company_id,
                 },
             }}
             onSelectingRowForEdit={(info) => SetEditableInfo(info ?? defaults)}
@@ -131,6 +148,7 @@ function Employees() {
                     email={editableInfo.email}
                     password={editableInfo.password}
                     roles={editableInfo.roles}
+                    company_id={editableInfo.company_id}
                     id={editableInfo.id}
                     onEditFields={(info) => SetEditableInfo(info ?? defaults)}
                 />
