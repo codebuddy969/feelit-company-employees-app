@@ -1,76 +1,85 @@
 version: '3'
 
 services:
-  # Backend service using Laravel
-  backend:
-    container_name: feelit-backend
-    build:
-      context: .
-      dockerfile: ./backend/Dockerfile.dev
-    environment:
-      DB_HOST: http://localhost
-      DB_PORT: 3306
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-    depends_on:
-      - db
-    env_file:
-      - .env
-    volumes:
-      - ./backend:/app
-    networks:
-      - app-network
-
-  # Frontend service using React
-  # frontend:
-  #   container_name: feelit-frontend
-  #   build:
-  #     context: .
-  #     dockerfile: ./frontend/Dockerfile.dev
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./frontend:/app
-  #   networks:
-  #     - app-network
-
-  # Nginx Service
-  nginx:
-    image: nginx:latest
-    container_name: feelit-nginx
-    restart: unless-stopped
-    ports:
-      - "8080:80"
-    volumes:
-      - ./nginx-conf:/etc/nginx/conf.d
-      - ./backend:/app
-    networks:
-      - app-network
-    depends_on:
-      - db
-      - backend
-
   # Database service using MySQL
-  db:
-    image: mysql:latest
-    container_name: feelit-mysql-db
-    restart: unless-stopped
+  mysql:
+    image: 'mysql/mysql-server:8.0'
+    platform: 'linux/x86_64'
+    container_name: mysql
+    # restart: unless-stopped
+    command: '--default-authentication-plugin=mysql_native_password'
     tty: true
     ports:
       - "3306:3306"
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: feelit_vlad_secrier_test_app_db
+      MYSQL_USER: mysql
+      MYSQL_PASSWORD: mysql
+      MYSQL_ROOT_PASSWORD: mysql
+    expose:
+      - "3306"
+      - "33060"
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      # - ./mysql-data:/var/lib/mysql
+      - mysqldbvolume:/var/lib/mysql
+      - ./docker/mysql/conf/my.cnf:/etc/mysql/my.cnf
     networks:
       - app-network
 
+  # Frontend service using React
+  frontend:
+    container_name: frontend
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+    networks:
+      - app-network
+
+  # Backend service using Laravel
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile.dev
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_HOST: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: feelit_vlad_secrier_test_app_db
+      DB_USERNAME: mysql
+      DB_PASSWORD: mysql
+    depends_on:
+      - mysql
+    # env_file:
+    #   - .env
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+
+  # Nginx Service
+  # nginx:
+  #   image: nginx:latest
+  #   container_name: nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx-conf:/etc/nginx/conf.d
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     - mysql
+
 volumes:
-  db-data:
+  mysqldbvolume:
+    driver: local
 
 networks:
   app-network:

@@ -1,8 +1,10 @@
 # Base image
 FROM php:8.1-fpm
 
+RUN mkdir /usr/src/backend
+
 # Set working directory
-WORKDIR /usr/src
+WORKDIR /usr/src/backend
 
 # Install dependencies
 RUN apt-get update && \
@@ -27,8 +29,19 @@ COPY ./backend/.env.example .env
 # Generate application key
 RUN php artisan key:generate
 
+# Optimizing Configuration loading
+RUN php artisan config:clear
+
+# Optimizing Route loading
+RUN php artisan cache:clear
+
 # Run database migrations and seeding
-RUN php artisan migrate:fresh --seed
+# RUN php artisan migrate:fresh --seed
 
 # Start development server
-CMD ["php", "artisan", "serve", "--host", "8.0.0.0"]
+# CMD ["php", "artisan", "serve", "--host", "0.0.0.0"]
+
+copy ./run.sh /tmp
+
+# # Run database migrations and seeding
+ENTRYPOINT ["timeout", "10000", "/tmp/run.sh"]

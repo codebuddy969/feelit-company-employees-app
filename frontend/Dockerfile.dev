@@ -1,8 +1,12 @@
 # Base image
 FROM node:latest
 
+RUN mkdir /usr/src/frontend
+
 # Set working directory
-WORKDIR /usr/src
+WORKDIR /usr/src/frontend
+
+COPY ./frontend/package.json ./package.json
 
 RUN ls -la
 
