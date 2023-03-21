@@ -2,7 +2,7 @@
 FROM php:8.1-fpm
 
 # Set working directory
-WORKDIR /var/www/html
+WORKDIR /usr/src
 
 # Install dependencies
 RUN apt-get update && \
@@ -16,13 +16,13 @@ RUN apt-get update && \
     curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 # Copy app code
-COPY . .
+COPY ./backend .
 
 # Install dependencies with Composer
 RUN composer install
 
 # Copy environment variables
-COPY .env.example .env
+COPY ./backend/.env.example .env
 
 # Generate application key
 RUN php artisan key:generate
@@ -31,4 +31,4 @@ RUN php artisan key:generate
 RUN php artisan migrate:fresh --seed
 
 # Start development server
-CMD ["php", "artisan", "serve", "--host", "0.0.0.0"]
+CMD ["php", "artisan", "serve", "--host", "8.0.0.0"]

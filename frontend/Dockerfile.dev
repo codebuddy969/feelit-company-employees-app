@@ -4,8 +4,6 @@ FROM node:latest
 # Set working directory
 WORKDIR /usr/src
 
-COPY ./frontend/package.json ./package.json
-
 RUN ls -la
 
 # Install dependencies

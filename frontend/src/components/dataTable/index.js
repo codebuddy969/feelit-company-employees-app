@@ -116,11 +116,12 @@ export default function DataTable({
             url: requestInfo.url,
             body: {ids: JSON.stringify(selected)},
         }).then((response) => {
-            alert(
-                response.data && response.data.message
-                    ? response.data.message
-                    : "Error not proceeded"
-            );
+            if (response.data && response.data.message) {
+                alert(response.data.message);
+                window.location.reload();
+            } else {
+                alert("Check Errors in inspector");
+            }
         });
     };
 
